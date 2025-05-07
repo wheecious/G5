@@ -1,7 +1,7 @@
 ---
 # the present playbook is based on the official docker doc: https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository
 - name: Install Docker on Ubuntu 24.04
-  hosts: wheecious01
+  hosts: grafana
   become: yes
 
   tasks:

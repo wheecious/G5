@@ -1,0 +1,24 @@
+---
+image: python:latest
+
+stages:
+  - ansible
+
+before_script:
+  - set -o errexit -o pipefail
+  - eval $(ssh-agent -s)
+  - mkdir -p ~/.ssh
+  - ssh-add <(echo $SSH_PRIVATE_KEY | base64 -d)
+  - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+  - pip install ansible
+
+ansible:
+  stage: ansible
+  when: always
+  script:
+    - '[[ -n "$GRAFANA_USER" ]] && (echo "GF_SECURITY_ADMIN_USER=$GRAFANA_USER" > files/.env) || exit 1'
+    - '[[ -n "$GRAFANA_PASS" ]] && (echo "GF_SECURITY_ADMIN_PASSWORD=$GRAFANA_PASS" >> files/.env) || exit 1'
+    - 'echo "docker_user: $PROJECT_USER" > host_vars/grafana.yml'
+    - '[[ -n "$GRAFANA_INI_ROOT_URL" ]] && echo $GRAFANA_INI_ROOT_URL >> files/grafana.ini || exit 1'
+    - echo "grafana ansible_host=$PROJECT_HOST ansible_user=$PROJECT_USER" > inventory
+    - ansible-playbook playbook.yml -i inventory -v
