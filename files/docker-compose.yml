@@ -1,0 +1,48 @@
+version: '3'
+
+services:
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana.ini:/etc/grafana/grafana.ini
+    environment:
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+    depends_on:
+      - prometheus
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.13.0
+    container_name: filebeat
+    user: root
+    ports:
+      - "5066:5066"
+    volumes:
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/log/test:/var/log/test
+    depends_on:
+      - prometheus
+      - grafana
+
+  json_exporter:
+    image: prometheuscommunity/json-exporter
+    container_name: json_exporter
+    ports:
+      - "7979:7979"
+    volumes:
+      - ./json_exporter_config.yml:/config/config.yml
+    command: --config.file=/config/config.yml

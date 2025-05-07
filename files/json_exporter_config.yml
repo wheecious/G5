@@ -1,0 +1,44 @@
+modules:
+  filebeat:
+    metrics:
+      - name: filebeat_harvester_running
+        path: "{.filebeat.harvester.running}"
+        metric_type: gauge
+        help: "Number of running harvesters"
+      - name: filebeat_harvester_started
+        path: "{.filebeat.harvester.started}"
+        metric_type: gauge
+        help: "Number of started harvesters"
+      - name: filebeat_harvester_open_files
+        path: "{.filebeat.harvester.open_files}"
+        metric_type: gauge
+        help: "Number of open files"
+      - name: filebeat_events_active
+        path: "{.filebeat.events.active}"
+        metric_type: gauge
+        help: "Number of active events"
+      - name: filebeat_events_added
+        path: "{.filebeat.events.added}"
+        metric_type: counter
+        help: "Number of added events"
+      - name: filebeat_events_done
+        path: "{.filebeat.events.done}"
+        metric_type: counter
+        help: "Number of done events"
+      - name: libbeat_output_events_total
+        path: "{.libbeat.output.events.total}"
+        metric_type: counter
+        help: "Total number of output events"
+      - name: libbeat_output_events_acked
+        path: "{.libbeat.output.events.acked}"
+        metric_type: counter
+        help: "Number of acknowledged events"
+      - name: libbeat_pipeline_events_total
+        path: "{.libbeat.pipeline.events.total}"
+        metric_type: counter
+        help: "Total number of pipeline events"
+      - name: libbeat_pipeline_events_published
+        path: "{.libbeat.pipeline.events.published}"
+        metric_type: counter
+        help: "Number of published events"
+    url: http://filebeat:5066/stats

@@ -1,0 +1,70 @@
+---
+- import_playbook: docker_install.yml
+- name: Grafana Prometheus Filebeat
+  hosts: grafana
+  become: true
+
+  vars:
+    compose_dir: /opt/monitoring
+
+  tasks:
+
+    - name: apt docker-compose-plugin nginx
+      apt:
+        name: [docker-compose-plugin, nginx]
+        state: present
+        update_cache: true
+
+    - name: ensure dir
+      file:
+        path: "{{ compose_dir }}"
+        state: directory
+
+    - name: move config files
+      copy:
+        src: files/
+        dest: "{{ compose_dir }}/"
+        mode: "0644"
+      with_fileglob:
+        - files/.env
+        - files/*.ini
+        - files/*.yaml
+        - files/*.yml
+        - files/*.conf
+      loop_control:
+        loop_var: file
+      notify: restart mon
+
+    - name: compose up
+      shell: docker compose up -d
+      args:
+        chdir: "{{ compose_dir }}"
+
+    - name: configure nginx
+      copy:
+        src: files/nginx.conf
+        dest: /etc/nginx/sites-available/monitoring
+      notify: restart nginx
+
+    - name: launch nginx
+      file:
+        src: /etc/nginx/sites-available/monitoring
+        dest: /etc/nginx/sites-enabled/monitoring
+        state: link
+        force: true
+
+    - name: rm default site
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+
+  handlers:
+    - name: restart nginx
+      service:
+        name: nginx
+        state: restarted
+
+    - name: restart mon
+      shell: docker compose restart
+      args:
+        chdir: "{{ compose_dir }}"

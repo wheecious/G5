@@ -1,0 +1,32 @@
+filebeat.inputs:
+  - type: container
+    paths:
+      - /var/lib/docker/containers/*/*.log
+    processors:
+      - add_docker_metadata: ~
+      - drop_event:
+          when.not.or:
+            - equals.container.name: "prometheus"
+            - equals.container.name: "grafana"
+            - equals.container.name: "filebeat"
+
+output.file:
+  path: "/var/log/test"
+  filename: "monitoring"
+  rotate_every_kb: 10000
+  number_of_files: 5
+  codec.json:
+    pretty: false
+
+http.enabled: true
+http.host: "0.0.0.0"
+http.port: 5066
+http.metrics.enabled: true
+
+logging:
+  level: info
+  to_files: true
+  files:
+    path: /usr/share/filebeat/logs
+    name: filebeat
+    keepfiles: 7
